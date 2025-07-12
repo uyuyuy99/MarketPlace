@@ -4,7 +4,9 @@ import dev.dejvokep.boostedyaml.YamlDocument;
 import dev.dejvokep.boostedyaml.settings.loader.LoaderSettings;
 import me.uyuyuy99.marketplace.MarketPlace;
 import me.uyuyuy99.marketplace.util.CC;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +60,10 @@ public class Config {
         return list;
     }
 
+    public static String[] getStringArray(String key, Object... args) {
+        return getStringList(key, args).toArray(new String[]{});
+    }
+
     public static String getMsg(String key, Object... args) {
         return getString("messages." + key, args);
     }
@@ -66,6 +72,10 @@ public class Config {
     public static void sendMsg(String key, CommandSender recipient, Object... args) {
         if (recipient == null) return;
         recipient.sendMessage(getMsg(key, args));
+    }
+
+    public static ItemStack getIcon(String key) {
+        return new ItemStack(Material.valueOf(MarketPlace.get().getConfig().getString(key).toUpperCase()), 1);
     }
 
 }

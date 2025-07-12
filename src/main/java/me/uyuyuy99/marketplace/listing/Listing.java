@@ -13,6 +13,7 @@ public class Listing {
 
     private final int id;
     private UUID uuid;
+    private String username;
     private ItemStack item;
     private long price;
     private long timeListed;

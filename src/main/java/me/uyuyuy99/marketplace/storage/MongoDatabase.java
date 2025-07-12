@@ -46,7 +46,7 @@ public class MongoDatabase {
         return result.getInteger("seq");
     }
 
-    public void connect() throws Exception {
+    public void connect() {
         client = new MongoClient(host, port);
         db = client.getDatabase(database);
         counters = db.getCollection("counters");
@@ -65,33 +65,38 @@ public class MongoDatabase {
     }
 
     // Loads all the item listings from the database into the item listing manager
-    public void loadItems() throws SQLException {
+    public void loadItems() {
         int itemCount = 0;
 
-        for (Document doc : itemTable.find(Filters.eq("valid", 1))) {
+        for (Document doc : itemTable.find()) {
             int id = doc.getInteger("_id");
             UUID uuid = UUID.fromString(doc.getString("uuid"));
+            String name = doc.getString("username");
             ItemStack item = ItemUtil.deserializeItem(doc.getString("item_data"));
             long price = doc.getLong("price");
             long timeListed = doc.getLong("time_start");
 
-            MarketPlace.listings().add(new Listing(id, uuid, item, price, timeListed));
+            MarketPlace.listings().getListings().add(new Listing(id, uuid, name, item, price, timeListed));
+            itemCount++;
         }
 
         MarketPlace.get().getLogger().info("Successfully loaded " + itemCount + " item listings from MongoDB.");
     }
 
-    // Returns ID of new item listings
-    public CompletableFuture<Integer> addItemListing(Player player, ItemStack item, long price) {
+    // Adds listing to database, returns Listing
+    public CompletableFuture<Listing> addItemListing(Player player, ItemStack item, long price) {
         return CompletableFuture.supplyAsync(() -> {
             int id = getNextItemId();
+            Listing listing = new Listing(id, player.getUniqueId(), player.getName(), item, price, System.currentTimeMillis());
+
             itemTable.insertOne(new Document("_id", id)
-                    .append("uuid", player.getUniqueId().toString())
+                    .append("uuid", listing.getUuid().toString())
+                    .append("username", listing.getUsername())
                     .append("item_data", ItemUtil.serializeItem(item))
                     .append("price", price)
-                    .append("time_start", System.currentTimeMillis())
+                    .append("time_start", listing.getTimeListed())
             );
-            return id;
+            return listing;
         });
     }
 

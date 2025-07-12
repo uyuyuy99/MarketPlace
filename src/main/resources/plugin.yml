@@ -6,3 +6,6 @@ permissions:
   marketplace.sell:
     description: Lists item in main hand for sale
     default: true
+  marketplace.view:
+    description: View the items for sale
+    default: true

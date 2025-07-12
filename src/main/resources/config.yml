@@ -1,2 +1,29 @@
+mongodb: # MongoDB connection details
+  host: 127.0.0.1
+  port: 27017
+  database: marketplace
+  user: root
+  password: ''
+
+options:
+  max-item-listings: 10 # Max number of items each player can list at a time
+
 messages:
   no-item-in-hand: "&c&l(!) &cYou must be holding an item in your main hand."
+  reached-max-listings: "&c&l(!) &cYou can't list more than &7{max}&c items at a time!"
+  list-item: "&aYou listed {amount}x {item}&a to the MarketPlace for ${price}!"
+
+market-gui: # MarketPlace GUI for item listings
+  title: "MarketPlace &7({page}/{maxpages})"
+  rows-per-page: 3
+  next-page-icon: LIME_STAINED_GLASS_PANE
+  previous-page-icon: LIME_STAINED_GLASS_PANE
+  header-icon: BLACK_STAINED_GLASS_PANE # Icon that fills the top row
+  next-page-text:
+    - "&e&lNext Page --->"
+  previous-page-text:
+    - "&e&l<--- Previous Page"
+  listing-text: # Added to the end of the lore of each item listing
+    - " "
+    - "&dSeller: &7{seller}"
+    - "&6Price: &7${price}"

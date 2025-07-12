@@ -2,13 +2,14 @@ package me.uyuyuy99.marketplace;
 
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIBukkitConfig;
-import lombok.Getter;
-import lombok.SneakyThrows;
+import me.uyuyuy99.marketplace.cmd.MarketplaceCmd;
 import me.uyuyuy99.marketplace.cmd.SellCmd;
 import me.uyuyuy99.marketplace.listing.ListingManager;
 import me.uyuyuy99.marketplace.storage.Config;
 import me.uyuyuy99.marketplace.storage.MongoDatabase;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.IOException;
 
 public final class MarketPlace extends JavaPlugin {
 
@@ -21,23 +22,55 @@ public final class MarketPlace extends JavaPlugin {
         CommandAPI.onLoad(new CommandAPIBukkitConfig(this));
     }
 
-    @SneakyThrows
     @Override
     public void onEnable() {
         plugin = this;
         //noinspection ResultOfMethodCallIgnored
         getDataFolder().mkdirs();
 
-        Config.load();
+        // Load/generate config.yml
+        try {
+            Config.load();
+        } catch (IOException e) {
+            getLogger().severe("Could not load config.yml!");
+            getServer().getPluginManager().disablePlugin(this);
+            throw new RuntimeException(e);
+        }
 
-        //TODO load Mongo details from config, connect to DB
+        // Create item listing manager & database
+        listings = new ListingManager();
+        db = new MongoDatabase(
+                Config.get().getString("mongodb.host"),
+                Config.get().getInt("mongodb.port"),
+                Config.get().getString("mongodb.database"),
+                Config.get().getString("mongodb.user"),
+                Config.get().getString("mongodb.password")
+        );
+
+        // Connect to DB & load item listings
+        try {
+            db.connect();
+        } catch (Exception e) {
+            getLogger().severe("Couldn't connect to MongoDB! Please fill in your connection details in config.yml.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        try {
+            db.loadItems();
+        } catch (Exception e) {
+            getLogger().severe("Couldn't load item listings from MongoDB!");
+            getServer().getPluginManager().disablePlugin(this);
+            throw new RuntimeException(e);
+        }
 
         // Register commands
         new SellCmd().register();
+        new MarketplaceCmd().register();
     }
 
     @Override
     public void onDisable() {
+        db.disconnect();
     }
 
     public static MarketPlace get() {
