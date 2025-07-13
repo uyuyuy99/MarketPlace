@@ -12,6 +12,10 @@ messages:
   no-item-in-hand: "&c&l(!) &cYou must be holding an item in your main hand."
   reached-max-listings: "&c&l(!) &cYou can't list more than &7{max}&c items at a time!"
   list-item: "&aYou listed {amount}x {item}&a to the MarketPlace for ${price}!"
+  sold-out: "&c&l(!) &cThat item has already been sold!"
+  cant-afford: "&c&l(!) &cYou can't afford to buy that item!"
+  buy-cancel: "&cYou cancelled the purchase."
+  buy-confirm: "&aYou purchased {amount}x {item} for ${price}!"
 
 market-gui: # MarketPlace GUI for item listings
   title: "MarketPlace &7({page}/{maxpages})"
@@ -26,4 +30,20 @@ market-gui: # MarketPlace GUI for item listings
   listing-text: # Added to the end of the lore of each item listing
     - " "
     - "&dSeller: &7{seller}"
+    - "&6Price: &7${price}"
+
+buy-confirm-gui:
+  title: "Confirm your Purchase"
+  rows: 3
+  cancel-slot: 11 # Slot index for the cancel button
+  confirm-slot: 15 # Slot index for the confirm button
+  cancel-icon: RED_WOOL
+  confirm-icon: GREEN_WOOL
+  filler-icon: BLACK_STAINED_GLASS_PANE # Icon that fills the gaps (AIR = no icon)
+  cancel-text:
+    - "&4&lCancel Purchase"
+  confirm-text:
+    - "&a&lConfirm Purchase"
+    - " "
+    - "&7{amount}x {item}"
     - "&6Price: &7${price}"

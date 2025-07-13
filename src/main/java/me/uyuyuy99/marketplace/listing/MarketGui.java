@@ -7,6 +7,7 @@ import de.themoep.inventorygui.StaticGuiElement;
 import me.uyuyuy99.marketplace.MarketPlace;
 import me.uyuyuy99.marketplace.storage.Config;
 import me.uyuyuy99.marketplace.util.NumberUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -43,8 +44,25 @@ public class MarketGui extends InventoryGui {
             meta.setLore(lore);
             item.setItemMeta(meta);
 
+            final int id = listing.getId();
             group.addElement(new StaticGuiElement('c', item, (click) -> {
-                //TODO open confirmation menu
+                // Check if listing is still available (prevents duping if other player buys the item while your menu is open)
+                if (MarketPlace.listings().getListing(id) == null) {
+                    Config.sendMsg("sold-out", viewer);
+                    return true;
+                }
+
+                // TODO check if player is buying from himself
+
+                // Check if player can afford the item
+                if (!MarketPlace.econ().has(viewer, listing.getPrice())) {
+                    Config.sendMsg("cant-afford", viewer);
+                    return true;
+                }
+
+                // Open confirmation menu
+                BuyConfirmGui confirmGui = new BuyConfirmGui(viewer, listing);
+                confirmGui.show(viewer);
                 return true;
             }));
         }

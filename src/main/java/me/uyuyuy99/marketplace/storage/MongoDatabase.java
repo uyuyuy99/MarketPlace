@@ -7,8 +7,10 @@ import me.uyuyuy99.marketplace.MarketPlace;
 import me.uyuyuy99.marketplace.listing.Listing;
 import me.uyuyuy99.marketplace.util.ItemUtil;
 import org.bson.Document;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -83,7 +85,7 @@ public class MongoDatabase {
         MarketPlace.get().getLogger().info("Successfully loaded " + itemCount + " item listings from MongoDB.");
     }
 
-    // Adds listing to database, returns Listing
+    // Adds listing to database, returns Listing (async)
     public CompletableFuture<Listing> addItemListing(Player player, ItemStack item, long price) {
         return CompletableFuture.supplyAsync(() -> {
             int id = getNextItemId();
@@ -98,6 +100,16 @@ public class MongoDatabase {
             );
             return listing;
         });
+    }
+
+    // Removes a listing from the DB (async)
+    public void removeItemListing(Listing listing) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                itemTable.deleteOne(Filters.eq("_id", listing.getId()));
+            }
+        }.runTaskAsynchronously(MarketPlace.get());
     }
 
 }

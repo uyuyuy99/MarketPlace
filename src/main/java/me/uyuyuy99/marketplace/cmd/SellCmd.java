@@ -14,6 +14,7 @@ public class SellCmd extends Cmd {
     public void register() {
         new CommandAPICommand("sell")
                 .withPermission("marketplace.sell")
+                .withAliases("mpsell")
                 .withArguments(new LongArgument("price"))
                 .executesPlayer((player, args) -> {
                     ItemStack item = player.getInventory().getItemInMainHand();

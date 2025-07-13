@@ -2,6 +2,8 @@ name: MarketPlace
 version: '1.0'
 main: me.uyuyuy99.marketplace.MarketPlace
 api-version: '1.20'
+depend:
+  - Vault
 permissions:
   marketplace.sell:
     description: Lists item in main hand for sale

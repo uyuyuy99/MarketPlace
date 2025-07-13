@@ -1,6 +1,7 @@
 package me.uyuyuy99.marketplace.util;
 
 import lombok.SneakyThrows;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.io.BukkitObjectInputStream;
@@ -9,6 +10,7 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Map;
 
 public class ItemUtil {
 
@@ -47,6 +49,13 @@ public class ItemUtil {
             toks[i] = toks[i].substring(0, 1).toUpperCase() + toks[i].substring(1).toLowerCase();
         }
         return String.join(" ", toks);
+    }
+
+    // Gives the item to the player, or drops it on the ground if his inventory is full
+    public static void giveOrDropItem(Player recipient, ItemStack item) {
+        for (ItemStack leftover : recipient.getInventory().addItem(item).values()) {
+            recipient.getWorld().dropItemNaturally(recipient.getLocation(), leftover);
+        }
     }
 
 }

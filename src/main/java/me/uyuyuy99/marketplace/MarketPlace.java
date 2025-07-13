@@ -7,6 +7,8 @@ import me.uyuyuy99.marketplace.cmd.SellCmd;
 import me.uyuyuy99.marketplace.listing.ListingManager;
 import me.uyuyuy99.marketplace.storage.Config;
 import me.uyuyuy99.marketplace.storage.MongoDatabase;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -16,6 +18,7 @@ public final class MarketPlace extends JavaPlugin {
     private static MarketPlace plugin;
     private static MongoDatabase db;
     private static ListingManager listings;
+    private static Economy econ;
 
     @Override
     public void onLoad() {
@@ -36,6 +39,15 @@ public final class MarketPlace extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             throw new RuntimeException(e);
         }
+
+        // Setup economy
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            getLogger().severe("Unable to to hook into Vault economy!");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        econ = rsp.getProvider();
 
         // Create item listing manager & database
         listings = new ListingManager();
@@ -83,6 +95,10 @@ public final class MarketPlace extends JavaPlugin {
 
     public static ListingManager listings() {
         return listings;
+    }
+
+    public static Economy econ() {
+        return econ;
     }
 
 }
