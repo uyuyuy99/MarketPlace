@@ -7,14 +7,9 @@ import me.uyuyuy99.marketplace.util.ItemUtil;
 import me.uyuyuy99.marketplace.util.NumberUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class BuyConfirmGui extends InventoryGui {
 
@@ -61,8 +56,14 @@ public class BuyConfirmGui extends InventoryGui {
                         // Give the item to the player & remove listing
                         ItemUtil.giveOrDropItem(viewer, listing.getItem());
                         MarketPlace.listings().removeListing(listing);
-
-                        //TODO add to transaction history
+                        MarketPlace.db().addTransaction(new Transaction(
+                                listing.getItem(),
+                                viewer.getUniqueId(),
+                                listing.getUuid(),
+                                moneySpent,
+                                moneyEarned,
+                                System.currentTimeMillis()
+                        ));
 
                         // Send message to buyer, and to seller if he's online
                         Config.sendMsg("buy-confirm", viewer,
