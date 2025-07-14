@@ -2,6 +2,7 @@ package me.uyuyuy99.marketplace;
 
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIBukkitConfig;
+import me.uyuyuy99.marketplace.cmd.BlackMarketCmd;
 import me.uyuyuy99.marketplace.cmd.MarketplaceCmd;
 import me.uyuyuy99.marketplace.cmd.SellCmd;
 import me.uyuyuy99.marketplace.listing.ListingManager;
@@ -78,6 +79,7 @@ public final class MarketPlace extends JavaPlugin {
         // Register commands
         new SellCmd().register();
         new MarketplaceCmd().register();
+        new BlackMarketCmd().register();
     }
 
     @Override

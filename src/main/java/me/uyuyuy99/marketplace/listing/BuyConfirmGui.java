@@ -6,6 +6,7 @@ import me.uyuyuy99.marketplace.storage.Config;
 import me.uyuyuy99.marketplace.util.ItemUtil;
 import me.uyuyuy99.marketplace.util.NumberUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -19,8 +20,10 @@ public class BuyConfirmGui extends InventoryGui {
 
     private Player viewer;
 
-    public BuyConfirmGui(Player viewer, Listing listing) {
+    public BuyConfirmGui(Player viewer, Listing listing, boolean black) {
         super(MarketPlace.get(), viewer, Config.getString("buy-confirm-gui.title"), buildGui());
+        long moneySpent = black ? listing.getPrice() / 2 : listing.getPrice();
+        long moneyEarned = black ? listing.getPrice() * 2 : listing.getPrice();
 
         // Create filler for header area
         setFiller(Config.getIcon("buy-confirm-gui.filler-icon"));
@@ -37,7 +40,7 @@ public class BuyConfirmGui extends InventoryGui {
                         "amount", listing.getItem().getAmount(),
                         "item", ItemUtil.getDisplayName(listing.getItem()),
                         "seller", listing.getUsername(),
-                        "price", NumberUtil.formatLong(listing.getPrice()))
+                        "price", NumberUtil.formatLong(moneySpent))
         );
         GuiElement confirmBtn = new StaticGuiElement('b',
                 Config.getIcon("buy-confirm-gui.confirm-icon"),
@@ -49,19 +52,29 @@ public class BuyConfirmGui extends InventoryGui {
                     }
 
                     // Double-check that player still has the funds to buy it
-                    if (MarketPlace.econ().has(viewer, listing.getPrice())) {
+                    if (MarketPlace.econ().has(viewer, moneySpent)) {
                         // Exchange money
-                        MarketPlace.econ().withdrawPlayer(viewer, listing.getPrice());
-                        MarketPlace.econ().depositPlayer(Bukkit.getOfflinePlayer(listing.getUuid()), listing.getPrice());
+                        OfflinePlayer seller = Bukkit.getOfflinePlayer(listing.getUuid());
+                        MarketPlace.econ().withdrawPlayer(viewer, moneySpent);
+                        MarketPlace.econ().depositPlayer(seller, moneyEarned);
 
                         // Give the item to the player & remove listing
                         ItemUtil.giveOrDropItem(viewer, listing.getItem());
                         MarketPlace.listings().removeListing(listing);
 
+                        //TODO add to transaction history
+
+                        // Send message to buyer, and to seller if he's online
                         Config.sendMsg("buy-confirm", viewer,
                                 "amount", listing.getItem().getAmount(),
                                 "item", ItemUtil.getDisplayName(listing.getItem()),
-                                "price", NumberUtil.formatLong(listing.getPrice()));
+                                "price", NumberUtil.formatLong(moneySpent));
+                        if (seller instanceof Player) {
+                            Config.sendMsg("your-item-sold", (Player) seller,
+                                    "amount", listing.getItem().getAmount(),
+                                    "item", ItemUtil.getDisplayName(listing.getItem()),
+                                    "money", NumberUtil.formatLong(moneyEarned));
+                        }
                     } else {
                         Config.sendMsg("cant-afford", viewer);
                     }
@@ -72,7 +85,7 @@ public class BuyConfirmGui extends InventoryGui {
                         "amount", listing.getItem().getAmount(),
                         "item", ItemUtil.getDisplayName(listing.getItem()),
                         "seller", listing.getUsername(),
-                        "price", NumberUtil.formatLong(listing.getPrice()))
+                        "price", NumberUtil.formatLong(moneySpent))
         );
 
         // Add buttons to GUI

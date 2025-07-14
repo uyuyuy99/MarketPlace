@@ -14,33 +14,51 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MarketGui extends InventoryGui {
 
-    private Player viewer;
+    private String configKey;
     private int curPage = 0;
     private int maxPages;
     private GuiStateElement prevPageElement;
     private GuiStateElement nextPageElement;
 
-    public MarketGui(Player viewer) {
-        super(MarketPlace.get(), viewer, " ", buildGui());
-        this.viewer = viewer;
+    public MarketGui(Player viewer, boolean black) {
+        super(MarketPlace.get(), viewer, " ", buildGui(black));
+        this.configKey = black ? "black-market-gui." : "market-gui.";
 
         // Create filler for header area
-        setFiller(Config.getIcon("market-gui.header-icon"));
+        setFiller(Config.getIcon(configKey + "header-icon"));
+
+        // If black market, randomize item listings
+        Collection<Listing> listings;
+        if (black) {
+            double chance = ((double) Config.get().getInt("options.black-market-item-chance")) / 100.0;
+            List<Listing> shuffledListings = new ArrayList<>(MarketPlace.listings().getListings());
+            Collections.shuffle(shuffledListings);
+            listings = shuffledListings.stream()
+                    .filter(l -> ThreadLocalRandom.current().nextDouble() < chance)
+                    .limit(Config.get().getInt("options.black-market-max-items"))
+                    .toList();
+        } else {
+            listings = MarketPlace.listings().getListings();
+        }
 
         // Create the item listings
         GuiElementGroup group = new GuiElementGroup('b');
-        for (Listing listing : MarketPlace.listings().getListings()) {
+        for (Listing listing : listings) {
+            long price = black ? listing.getPrice() / 2 : listing.getPrice();
             ItemStack item = listing.getItem().clone();
             ItemMeta meta = item.getItemMeta();
             List<String> lore = item.getItemMeta().hasLore() ? item.getItemMeta().getLore() : new ArrayList<>();
 
-            lore.addAll(Config.getStringList("market-gui.listing-text",
+            lore.addAll(Config.getStringList(configKey + "listing-text",
                     "seller", listing.getUsername(),
-                    "price", NumberUtil.formatLong(listing.getPrice())));
+                    "price", NumberUtil.formatLong(price)));
             meta.setLore(lore);
             item.setItemMeta(meta);
 
@@ -52,23 +70,26 @@ public class MarketGui extends InventoryGui {
                     return true;
                 }
 
-                // TODO check if player is buying from himself
-//                if (MarketPlace.listings().)
+                // Check if player is buying from himself
+                if (listing.getUuid().equals(viewer.getUniqueId())) {
+                    Config.sendMsg("cant-buy-from-yourself", viewer);
+                    return true;
+                }
 
                 // Check if player can afford the item
-                if (!MarketPlace.econ().has(viewer, listing.getPrice())) {
+                if (!MarketPlace.econ().has(viewer, price)) {
                     Config.sendMsg("cant-afford", viewer);
                     return true;
                 }
 
-                // Open confirmation menu
-                BuyConfirmGui confirmGui = new BuyConfirmGui(viewer, listing);
+                // If all checks pass, open confirmation menu
+                BuyConfirmGui confirmGui = new BuyConfirmGui(viewer, listing, black);
                 confirmGui.show(viewer);
                 return true;
             }));
         }
         addElement(group);
-        this.maxPages = Math.max(1, ((group.size() - 1) / (Config.get().getInt("market-gui.rows-per-page") * 9)) + 1);
+        this.maxPages = Math.max(1, ((group.size() - 1) / (Config.get().getInt(configKey + "rows-per-page") * 9)) + 1);
 
         // Create next/previous page buttons
         prevPageElement = new GuiStateElement('p',
@@ -76,13 +97,13 @@ public class MarketGui extends InventoryGui {
                 new GuiStateElement.State(
                         change -> {},
                         "on",
-                        Config.getIcon("market-gui.previous-page-icon"),
-                        Config.getStringArray("market-gui.previous-page-text")
+                        Config.getIcon(configKey + "previous-page-icon"),
+                        Config.getStringArray(configKey + "previous-page-text")
                 ),
                 new GuiStateElement.State(
                         change -> {},
                         "off",
-                        Config.getIcon("market-gui.header-icon"),
+                        Config.getIcon(configKey + "header-icon"),
                         " "
                 )
         );
@@ -91,13 +112,13 @@ public class MarketGui extends InventoryGui {
                 new GuiStateElement.State(
                         change -> {},
                         "on",
-                        Config.getIcon("market-gui.next-page-icon"),
-                        Config.getStringArray("market-gui.next-page-text")
+                        Config.getIcon(configKey + "next-page-icon"),
+                        Config.getStringArray(configKey + "next-page-text")
                 ),
                 new GuiStateElement.State(
                         change -> {},
                         "off",
-                        Config.getIcon("market-gui.header-icon"),
+                        Config.getIcon(configKey + "header-icon"),
                         " "
                 )
         );
@@ -118,8 +139,9 @@ public class MarketGui extends InventoryGui {
         });
     }
 
-    private static String[] buildGui() {
-        int rows = Math.min(6, Math.max(2, Config.get().getInt("market-gui.rows-per-page") + 1));
+    private static String[] buildGui(boolean black) {
+        String configKey = black ? "black-market-gui." : "market-gui.";
+        int rows = Math.min(6, Math.max(2, Config.get().getInt(configKey + "rows-per-page") + 1));
         String[] guiSetup = new String[rows];
         guiSetup[0] = "p       n";
         for (int i = 1; i < rows; i++) {
@@ -129,7 +151,7 @@ public class MarketGui extends InventoryGui {
     }
 
     private void updateTitle() {
-        setTitle(Config.getString("market-gui.title",
+        setTitle(Config.getString(configKey + "title",
                 "page", curPage + 1,
                 "maxpages", maxPages));
     }

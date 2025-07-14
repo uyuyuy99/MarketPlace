@@ -7,6 +7,8 @@ mongodb: # MongoDB connection details
 
 options:
   max-item-listings: 10 # Max number of items each player can list at a time
+  black-market-item-chance: 30 # Percent change for each item to appear in the Black Market
+  black-market-max-items: 50 # Maximum number of items that can appear in the Black Market
 
 messages:
   no-item-in-hand: "&c&l(!) &cYou must be holding an item in your main hand."
@@ -14,10 +16,12 @@ messages:
   list-item: "&aYou listed {amount}x {item}&a to the MarketPlace for ${price}!"
   sold-out: "&c&l(!) &cThat item has already been sold!"
   cant-afford: "&c&l(!) &cYou can't afford to buy that item!"
+  cant-buy-from-yourself: "&c&l(!) &cYou can't buy items from yourself!"
   buy-cancel: "&cYou cancelled the purchase."
-  buy-confirm: "&aYou purchased {amount}x {item} for ${price}!"
+  buy-confirm: "&aYou purchased {amount}x {item}&a for ${price}!"
+  your-item-sold: "&aYou earned ${money} for selling {amount}x {item}&a!"
 
-market-gui: # MarketPlace GUI for item listings
+market-gui: # Regular Market Place GUI for item listings
   title: "MarketPlace &7({page}/{maxpages})"
   rows-per-page: 3
   next-page-icon: LIME_STAINED_GLASS_PANE
@@ -31,6 +35,21 @@ market-gui: # MarketPlace GUI for item listings
     - " "
     - "&dSeller: &7{seller}"
     - "&6Price: &7${price}"
+
+black-market-gui: # Black Market GUI for item listings
+  title: "Black Market &7({page}/{maxpages})"
+  rows-per-page: 3
+  next-page-icon: LIME_STAINED_GLASS_PANE
+  previous-page-icon: LIME_STAINED_GLASS_PANE
+  header-icon: BLACK_STAINED_GLASS_PANE # Icon that fills the top row
+  next-page-text:
+    - "&e&lNext Page --->"
+  previous-page-text:
+    - "&e&l<--- Previous Page"
+  listing-text: # Added to the end of the lore of each item listing
+    - " "
+    - "&dSeller: &7{seller}"
+    - "&6Discounted Price: &7${price}"
 
 buy-confirm-gui:
   title: "Confirm your Purchase"
