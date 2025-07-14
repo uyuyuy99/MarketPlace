@@ -53,6 +53,7 @@ public class MarketGui extends InventoryGui {
                 }
 
                 // TODO check if player is buying from himself
+//                if (MarketPlace.listings().)
 
                 // Check if player can afford the item
                 if (!MarketPlace.econ().has(viewer, listing.getPrice())) {

@@ -1,6 +1,8 @@
 package me.uyuyuy99.marketplace.storage;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
 import me.uyuyuy99.marketplace.MarketPlace;
@@ -49,7 +51,9 @@ public class MongoDatabase {
     }
 
     public void connect() {
-        client = new MongoClient(host, port);
+        client = new MongoClient(
+                new MongoClientURI("mongodb://" + username + ":" + password + "@" + host + ":" + port + "/?authSource=admin")
+        );
         db = client.getDatabase(database);
         counters = db.getCollection("counters");
         itemTable = db.getCollection("item_listings");
