@@ -5,14 +5,14 @@ import me.uyuyuy99.marketplace.MarketPlace;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 // Manages all the item listings in the marketplace
 @Getter
 public class ListingManager {
 
-    private Queue<Listing> listings = new ConcurrentLinkedQueue<>();
+    private Deque<Listing> listings = new ConcurrentLinkedDeque<>();
 
     public Listing getListing(int id) {
         return listings.stream()
@@ -24,7 +24,7 @@ public class ListingManager {
     public void addListing(Player player, ItemStack item, long price) {
         // Add to DB, and add to manager once completed (async)
         MarketPlace.db().addItemListing(player, item, price).thenAccept((listing) -> {
-            listings.add(listing);
+            listings.addFirst(listing);
         });
     }
 

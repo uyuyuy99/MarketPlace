@@ -20,6 +20,8 @@ messages:
   buy-cancel: "&cYou cancelled the purchase."
   buy-confirm: "&aYou purchased {amount}x {item}&a for ${price}!"
   your-item-sold: "&aYou earned ${money} for selling {amount}x {item}&a!"
+  unlisted-item: "&cYou unlisted {amount}x {item}&c from the MarketPlace!"
+  market-empty: "&cThere are no items listed on the MarketPlace."
 
 market-gui: # Regular Market Place GUI for item listings
   title: "MarketPlace &7({page}/{maxpages})"
@@ -35,6 +37,31 @@ market-gui: # Regular Market Place GUI for item listings
     - " "
     - "&dSeller: &7{seller}"
     - "&6Price: &7${price}"
+  my-listing-text: # Added to the end of the lore of your own item listings
+    - " "
+    - "&dSeller: &7{seller}"
+    - "&6Price: &7${price}"
+    - "&c&nClick to unlist this item"
+
+my-listings-gui: # GUI showing your own listings
+  title: "My Item Listings &7({page}/{maxpages})"
+  rows-per-page: 3
+  next-page-icon: LIME_STAINED_GLASS_PANE
+  previous-page-icon: LIME_STAINED_GLASS_PANE
+  header-icon: BLACK_STAINED_GLASS_PANE # Icon that fills the top row
+  player-head-text: # Lore text for player head at top-center of GUI
+    - "&e&n{player}'s MarketPlace Listings"
+    - "&7Click an item to unlist"
+    - "&7it from the MarketPlace."
+    - "&7The item will be returned to you."
+  next-page-text:
+    - "&e&lNext Page --->"
+  previous-page-text:
+    - "&e&l<--- Previous Page"
+  my-listing-text: # Added to the end of the lore of each item listing
+    - " "
+    - "&6Price: &7${price}"
+    - "&c&nClick to unlist this item"
 
 black-market-gui: # Black Market GUI for item listings
   title: "Black Market &7({page}/{maxpages})"
@@ -76,8 +103,8 @@ transactions-gui: # GUI for showing a player's transaction history
   player-head-text: # Lore text for player head at top-center of GUI
     - "&a&n{player}'s Transactions"
     - " "
-    - "&eTotal Purchases: &7{purchases} (${moneyspent})"
-    - "&6Total Sales: &7{sales} (${moneyearned})"
+    - "&eTotal Purchases: &f{purchases}&7 (${moneyspent})"
+    - "&6Total Sales: &f{sales}&7 (${moneyearned})"
   next-page-text:
     - "&e&lNext Page --->"
   previous-page-text:

@@ -1,6 +1,7 @@
 package me.uyuyuy99.marketplace.cmd;
 
 import dev.jorel.commandapi.CommandAPICommand;
+import me.uyuyuy99.marketplace.MarketPlace;
 import me.uyuyuy99.marketplace.listing.MarketGui;
 import me.uyuyuy99.marketplace.storage.Config;
 import org.bukkit.ChatColor;
@@ -14,7 +15,12 @@ public class MarketplaceCmd extends Cmd {
         new CommandAPICommand("marketplace")
                 .withPermission("marketplace.view")
                 .executesPlayer((player, args) -> {
-                    MarketGui gui = new MarketGui(player, false);
+                    // Only open menu if there are active listings
+                    if (MarketPlace.listings().getListings().isEmpty()) {
+                        Config.sendMsg("market-empty", player);
+                        return;
+                    }
+                    MarketGui gui = new MarketGui(player, false, false);
                     gui.show(player);
                 })
                 .withSubcommand(new CommandAPICommand("reload")

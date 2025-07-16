@@ -78,7 +78,7 @@ public class MongoDatabase {
     public void loadItems() {
         int itemCount = 0;
 
-        for (Document doc : itemTable.find()) {
+        for (Document doc : itemTable.find().sort(Sorts.descending("time_start"))) {
             int id = doc.getInteger("_id");
             UUID uuid = UUID.fromString(doc.getString("uuid"));
             String name = doc.getString("username");

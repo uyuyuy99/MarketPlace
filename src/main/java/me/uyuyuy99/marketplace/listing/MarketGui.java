@@ -6,17 +6,21 @@ import de.themoep.inventorygui.InventoryGui;
 import de.themoep.inventorygui.StaticGuiElement;
 import me.uyuyuy99.marketplace.MarketPlace;
 import me.uyuyuy99.marketplace.storage.Config;
+import me.uyuyuy99.marketplace.util.ItemUtil;
 import me.uyuyuy99.marketplace.util.NumberUtil;
+import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 public class MarketGui extends InventoryGui {
 
@@ -26,9 +30,15 @@ public class MarketGui extends InventoryGui {
     private GuiStateElement prevPageElement;
     private GuiStateElement nextPageElement;
 
-    public MarketGui(Player viewer, boolean black) {
+    public MarketGui(Player viewer, boolean black, boolean mine) {
         super(MarketPlace.get(), viewer, " ", buildGui(black));
-        this.configKey = black ? "black-market-gui." : "market-gui.";
+        if (black) {
+            this.configKey = "black-market-gui.";
+        } else if (mine) {
+            this.configKey = "my-listings-gui.";
+        } else {
+            this.configKey = "market-gui.";
+        }
 
         // Create filler for header area
         setFiller(Config.getIcon(configKey + "header-icon"));
@@ -37,14 +47,28 @@ public class MarketGui extends InventoryGui {
         Collection<Listing> listings;
         if (black) {
             double chance = ((double) Config.get().getInt("options.black-market-item-chance")) / 100.0;
-            List<Listing> shuffledListings = new ArrayList<>(MarketPlace.listings().getListings());
+            List<Listing> shuffledListings = MarketPlace.listings().getListings().stream()
+                    .filter(l -> !viewer.getUniqueId().equals(l.getUuid()))
+                    .collect(Collectors.toCollection(ArrayList::new));
             Collections.shuffle(shuffledListings);
             listings = shuffledListings.stream()
                     .filter(l -> ThreadLocalRandom.current().nextDouble() < chance)
                     .limit(Config.get().getInt("options.black-market-max-items"))
                     .toList();
+
+            // If no items were chosen, pick at least one so the black market isn't empty
+            if (listings.isEmpty() && !shuffledListings.isEmpty()) {
+                listings = new ArrayList<>();
+                listings.add(shuffledListings.get(0));
+            }
         } else {
-            listings = MarketPlace.listings().getListings();
+            if (mine) { // Only show your own listings
+                listings = MarketPlace.listings().getListings().stream()
+                        .filter(l -> viewer.getUniqueId().equals(l.getUuid()))
+                        .toList();
+            } else { // Show all listings
+                listings = MarketPlace.listings().getListings();
+            }
         }
 
         // Create the item listings
@@ -55,7 +79,9 @@ public class MarketGui extends InventoryGui {
             ItemMeta meta = item.getItemMeta();
             List<String> lore = item.getItemMeta().hasLore() ? item.getItemMeta().getLore() : new ArrayList<>();
 
-            lore.addAll(Config.getStringList(configKey + "listing-text",
+            // Add text showing the seller & price to the end of the item lore
+            String listingTextKey = listing.getUuid().equals(viewer.getUniqueId()) ? "my-listing-text" : "listing-text";
+            lore.addAll(Config.getStringList(configKey + listingTextKey,
                     "seller", listing.getUsername(),
                     "price", NumberUtil.formatLong(price)));
             meta.setLore(lore);
@@ -69,9 +95,15 @@ public class MarketGui extends InventoryGui {
                     return true;
                 }
 
-                // Check if player is buying from himself
+                // If player owns this item, remove from marketplace & give his item back
                 if (listing.getUuid().equals(viewer.getUniqueId())) {
-                    Config.sendMsg("cant-buy-from-yourself", viewer);
+                    MarketPlace.listings().removeListing(listing);
+                    ItemUtil.giveOrDropItem(viewer, listing.getItem());
+                    Config.sendMsg("unlisted-item", viewer,
+                            "amount", listing.getItem().getAmount(),
+                            "item", ItemUtil.getDisplayName(listing.getItem())
+                    );
+                    close(viewer);
                     return true;
                 }
 
@@ -81,7 +113,7 @@ public class MarketGui extends InventoryGui {
                     return true;
                 }
 
-                // If all checks pass, open confirmation menu
+                // If all checks pass, confirm the purchase
                 BuyConfirmGui confirmGui = new BuyConfirmGui(viewer, listing, black);
                 confirmGui.show(viewer);
                 return true;
@@ -89,6 +121,17 @@ public class MarketGui extends InventoryGui {
         }
         addElement(group);
         this.maxPages = Math.max(1, ((group.size() - 1) / (Config.get().getInt(configKey + "rows-per-page") * 9)) + 1);
+
+        // If showing your own listings, create player head icon
+        if (mine) {
+            ItemStack headIcon = new ItemStack(Material.PLAYER_HEAD, 1);
+            SkullMeta skullMeta = (SkullMeta) headIcon.getItemMeta();
+            skullMeta.setOwnerProfile(viewer.getPlayerProfile());
+            headIcon.setItemMeta(skullMeta);
+            setElement(4, new StaticGuiElement('h', headIcon, Config.getStringArray(configKey + "player-head-text",
+                    "player", viewer.getName()
+            )));
+        }
 
         // Create next/previous page buttons
         prevPageElement = new GuiStateElement('p',
