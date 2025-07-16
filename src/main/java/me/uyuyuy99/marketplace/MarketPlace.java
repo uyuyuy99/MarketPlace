@@ -5,6 +5,7 @@ import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import me.uyuyuy99.marketplace.cmd.BlackMarketCmd;
 import me.uyuyuy99.marketplace.cmd.MarketplaceCmd;
 import me.uyuyuy99.marketplace.cmd.SellCmd;
+import me.uyuyuy99.marketplace.cmd.TransactionsCmd;
 import me.uyuyuy99.marketplace.listing.ListingManager;
 import me.uyuyuy99.marketplace.storage.Config;
 import me.uyuyuy99.marketplace.storage.MongoDatabase;
@@ -80,6 +81,7 @@ public final class MarketPlace extends JavaPlugin {
         new SellCmd().register();
         new MarketplaceCmd().register();
         new BlackMarketCmd().register();
+        new TransactionsCmd().register();
     }
 
     @Override

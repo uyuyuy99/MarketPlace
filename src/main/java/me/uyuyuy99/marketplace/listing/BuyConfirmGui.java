@@ -60,6 +60,8 @@ public class BuyConfirmGui extends InventoryGui {
                                 listing.getItem(),
                                 viewer.getUniqueId(),
                                 listing.getUuid(),
+                                viewer.getName(),
+                                listing.getUsername(),
                                 moneySpent,
                                 moneyEarned,
                                 System.currentTimeMillis()

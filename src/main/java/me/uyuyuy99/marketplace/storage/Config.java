@@ -75,7 +75,7 @@ public class Config {
     }
 
     public static ItemStack getIcon(String key) {
-        return new ItemStack(Material.valueOf(MarketPlace.get().getConfig().getString(key).toUpperCase()), 1);
+        return new ItemStack(Material.valueOf(Config.get().getString(key).toUpperCase()), 1);
     }
 
 }

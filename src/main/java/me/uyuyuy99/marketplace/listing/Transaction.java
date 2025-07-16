@@ -14,6 +14,8 @@ public class Transaction {
     private ItemStack item;
     private UUID buyer;
     private UUID seller;
+    private String buyerName;
+    private String sellerName;
     private long moneySpent;
     private long moneyEarned;
     private long time;

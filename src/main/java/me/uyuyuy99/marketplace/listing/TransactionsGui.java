@@ -7,10 +7,12 @@ import de.themoep.inventorygui.StaticGuiElement;
 import me.uyuyuy99.marketplace.MarketPlace;
 import me.uyuyuy99.marketplace.storage.Config;
 import me.uyuyuy99.marketplace.util.NumberUtil;
+import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,74 +20,53 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class MarketGui extends InventoryGui {
+public class TransactionsGui extends InventoryGui {
 
-    private String configKey;
+    private static String configKey = "transactions-gui.";
     private int curPage = 0;
     private int maxPages;
     private GuiStateElement prevPageElement;
     private GuiStateElement nextPageElement;
 
-    public MarketGui(Player viewer, boolean black) {
-        super(MarketPlace.get(), viewer, " ", buildGui(black));
-        this.configKey = black ? "black-market-gui." : "market-gui.";
+    public TransactionsGui(Player viewer, List<Transaction> transactions) {
+        super(MarketPlace.get(), viewer, " ", buildGui());
 
         // Create filler for header area
         setFiller(Config.getIcon(configKey + "header-icon"));
 
-        // If black market, randomize item listings
-        Collection<Listing> listings;
-        if (black) {
-            double chance = ((double) Config.get().getInt("options.black-market-item-chance")) / 100.0;
-            List<Listing> shuffledListings = new ArrayList<>(MarketPlace.listings().getListings());
-            Collections.shuffle(shuffledListings);
-            listings = shuffledListings.stream()
-                    .filter(l -> ThreadLocalRandom.current().nextDouble() < chance)
-                    .limit(Config.get().getInt("options.black-market-max-items"))
-                    .toList();
-        } else {
-            listings = MarketPlace.listings().getListings();
-        }
+        // Create the player head icon showing total transaction stats
+        ItemStack headIcon = new ItemStack(Material.PLAYER_HEAD, 1);
+        SkullMeta skullMeta = (SkullMeta) headIcon.getItemMeta();
+        skullMeta.setOwnerProfile(viewer.getPlayerProfile());
+        headIcon.setItemMeta(skullMeta);
+        setElement(4, new StaticGuiElement('h', headIcon, Config.getStringArray(configKey + "player-head-text",
+                "player", viewer.getName(),
+                "purchases", transactions.stream().filter(t -> t.isBuyer(viewer)).count(),
+                "sales", transactions.stream().filter(t -> t.isSeller(viewer)).count(),
+                "moneyspent", NumberUtil.formatLong(transactions.stream().filter(t -> t.isBuyer(viewer)).mapToLong(Transaction::getMoneySpent).sum()),
+                "moneyearned", NumberUtil.formatLong(transactions.stream().filter(t -> t.isSeller(viewer)).mapToLong(Transaction::getMoneyEarned).sum())
+        )));
 
-        // Create the item listings
+        // Create the item transaction icon
         GuiElementGroup group = new GuiElementGroup('b');
-        for (Listing listing : listings) {
-            long price = black ? listing.getPrice() / 2 : listing.getPrice();
-            ItemStack item = listing.getItem().clone();
+        for (Transaction tran : transactions) {
+            ItemStack item = tran.getItem().clone();
             ItemMeta meta = item.getItemMeta();
             List<String> lore = item.getItemMeta().hasLore() ? item.getItemMeta().getLore() : new ArrayList<>();
 
-            lore.addAll(Config.getStringList(configKey + "listing-text",
-                    "seller", listing.getUsername(),
-                    "price", NumberUtil.formatLong(price)));
+            if (tran.isBuyer(viewer)) {
+                lore.addAll(Config.getStringList(configKey + "bought-text",
+                        "seller", tran.getSellerName(),
+                        "price", NumberUtil.formatLong(tran.getMoneySpent())));
+            } else {
+                lore.addAll(Config.getStringList(configKey + "sold-text",
+                        "buyer", tran.getBuyerName(),
+                        "money", NumberUtil.formatLong(tran.getMoneyEarned())));
+            }
             meta.setLore(lore);
             item.setItemMeta(meta);
 
-            final int id = listing.getId();
-            group.addElement(new StaticGuiElement('c', item, (click) -> {
-                // Check if listing is still available (prevents duping if other player buys the item while your menu is open)
-                if (MarketPlace.listings().getListing(id) == null) {
-                    Config.sendMsg("sold-out", viewer);
-                    return true;
-                }
-
-                // Check if player is buying from himself
-                if (listing.getUuid().equals(viewer.getUniqueId())) {
-                    Config.sendMsg("cant-buy-from-yourself", viewer);
-                    return true;
-                }
-
-                // Check if player can afford the item
-                if (!MarketPlace.econ().has(viewer, price)) {
-                    Config.sendMsg("cant-afford", viewer);
-                    return true;
-                }
-
-                // If all checks pass, open confirmation menu
-                BuyConfirmGui confirmGui = new BuyConfirmGui(viewer, listing, black);
-                confirmGui.show(viewer);
-                return true;
-            }));
+            group.addElement(new StaticGuiElement('c', item));
         }
         addElement(group);
         this.maxPages = Math.max(1, ((group.size() - 1) / (Config.get().getInt(configKey + "rows-per-page") * 9)) + 1);
@@ -138,8 +119,7 @@ public class MarketGui extends InventoryGui {
         });
     }
 
-    private static String[] buildGui(boolean black) {
-        String configKey = black ? "black-market-gui." : "market-gui.";
+    private static String[] buildGui() {
         int rows = Math.min(6, Math.max(2, Config.get().getInt(configKey + "rows-per-page") + 1));
         String[] guiSetup = new String[rows];
         guiSetup[0] = "p       n";

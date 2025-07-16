@@ -134,11 +134,13 @@ public class MongoDatabase {
                 ItemStack item = ItemUtil.deserializeItem(doc.getString("item_data"));
                 UUID buyer = UUID.fromString(doc.getString("buyer"));
                 UUID seller = UUID.fromString(doc.getString("seller"));
+                String buyerName = doc.getString("buyer_name");
+                String sellerName = doc.getString("seller_name");
                 long moneySpent = doc.getLong("money_spent");
                 long moneyEarned = doc.getLong("money_earned");
                 long time = doc.getLong("time_bought");
 
-                transactions.add(new Transaction(item, buyer, seller, moneySpent, moneyEarned, time));
+                transactions.add(new Transaction(item, buyer, seller, buyerName, sellerName, moneySpent, moneyEarned, time));
             }
             return transactions;
         });
@@ -152,6 +154,8 @@ public class MongoDatabase {
                         .append("item_data", ItemUtil.serializeItem(transaction.getItem()))
                         .append("buyer", transaction.getBuyer().toString())
                         .append("seller", transaction.getSeller().toString())
+                        .append("buyer_name", transaction.getBuyerName())
+                        .append("seller_name", transaction.getSellerName())
                         .append("money_spent", transaction.getMoneySpent())
                         .append("money_earned", transaction.getMoneyEarned())
                         .append("time_bought", transaction.getTime())
