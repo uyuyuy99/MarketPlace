@@ -9,13 +9,18 @@ import com.mongodb.client.model.*;
 import me.uyuyuy99.marketplace.MarketPlace;
 import me.uyuyuy99.marketplace.listing.Listing;
 import me.uyuyuy99.marketplace.listing.Transaction;
+import me.uyuyuy99.marketplace.util.CC;
+import me.uyuyuy99.marketplace.util.DiscordWebhook;
 import me.uyuyuy99.marketplace.util.ItemUtil;
+import me.uyuyuy99.marketplace.util.NumberUtil;
+import org.apache.commons.lang.StringUtils;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -150,6 +155,7 @@ public class MongoDatabase {
         new BukkitRunnable() {
             @Override
             public void run() {
+                // Add to DB
                 historyTable.insertOne(new Document()
                         .append("item_data", ItemUtil.serializeItem(transaction.getItem()))
                         .append("buyer", transaction.getBuyer().toString())
@@ -160,6 +166,33 @@ public class MongoDatabase {
                         .append("money_earned", transaction.getMoneyEarned())
                         .append("time_bought", transaction.getTime())
                 );
+
+                // Execute Discord Webhook if enabled
+                String webhookURL = Config.get().getString("discord-webhook.hook-url");
+                if (webhookURL != null && !webhookURL.isEmpty()) {
+                    String description = StringUtils.join(Config.getStringArray("discord-webhook.description",
+                            "buyer", transaction.getBuyerName(),
+                            "seller", transaction.getSellerName(),
+                            "amount", transaction.getItem().getAmount(),
+                            "item", CC.strip(ItemUtil.getDisplayName(transaction.getItem())),
+                            "price", NumberUtil.formatLong(transaction.getMoneySpent()),
+                            "earned", NumberUtil.formatLong(transaction.getMoneyEarned())
+                    ), "\\n");
+
+                    DiscordWebhook webhook = new DiscordWebhook(webhookURL);
+                    webhook.addEmbed(new DiscordWebhook.EmbedObject()
+                            .setTitle(Config.get().getString("discord-webhook.title"))
+                            .setDescription(description)
+                            .setUrl(Config.get().getString("discord-webhook.link"))
+                    );
+                    try {
+                        webhook.execute();
+                    } catch (IOException e) {
+                        MarketPlace.get().getLogger().severe(
+                                "Unable to execute Discord Webhook for player transaction! Check your URL in config.yml.");
+                        throw new RuntimeException(e);
+                    }
+                }
             }
         }.runTaskAsynchronously(MarketPlace.get());
     }

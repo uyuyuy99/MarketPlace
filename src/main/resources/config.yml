@@ -5,6 +5,17 @@ mongodb: # MongoDB connection details
   user: root
   password: ''
 
+discord-webhook:
+  hook-url: "" # Leave empty for no discord logging
+  title: "MarketPlace"
+  description:
+    - "Buyer: {buyer}"
+    - "Seller: {seller}"
+    - "Item: {amount}x {item}"
+    - "Bought For: ${price}"
+    - "Sold For: ${earned}"
+  link: ""
+
 options:
   max-item-listings: 10 # Max number of items each player can list at a time
   black-market-item-chance: 30 # Percent change for each item to appear in the Black Market
