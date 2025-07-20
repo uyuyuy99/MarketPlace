@@ -6,7 +6,7 @@ MarketPlace is a plugin for spigot 1.21.4 that allows players to buy & sell item
 - `/sell <price>`: List the item in your main hand in the marketplace. Requires permission `marketplace.sell`
 - `/marketplace`: View all items for sale in the marketplace. Requires permission `marketplace.view`
 - `/mylistings`: View your own item listings in the marketplace. Requires permission `marketplace.view`
-- `/blackmarket`: View all items for sale in the black market. Items are chosen randomly from the marketplace every 24 hours, and are discounted by 50%. The seller earns 2x the original price. Requires permission `marketplace.blackmarket`
+- `/blackmarket`: View all items for sale in the black market. Items are chosen randomly from the marketplace every 24h, and are discounted by 50%. The seller earns 2x the original price. Requires permission `marketplace.blackmarket`
 - `/transactions`: View your transaction history. Requires permission `marketplace.history`
 ### Admin Commands
 - `/marketplace reload`: Reload config.yml. Requires permission `marketplace.reload`
