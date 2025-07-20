@@ -3,6 +3,7 @@ package me.uyuyuy99.marketplace;
 import dev.jorel.commandapi.CommandAPI;
 import dev.jorel.commandapi.CommandAPIBukkitConfig;
 import me.uyuyuy99.marketplace.cmd.*;
+import me.uyuyuy99.marketplace.listing.BlackMarketTask;
 import me.uyuyuy99.marketplace.listing.ListingManager;
 import me.uyuyuy99.marketplace.storage.Config;
 import me.uyuyuy99.marketplace.storage.MongoDatabase;
@@ -88,6 +89,7 @@ public final class MarketPlace extends JavaPlugin {
     @Override
     public void onDisable() {
         db.disconnect();
+        BlackMarketTask.save();
     }
 
     public static MarketPlace get() {

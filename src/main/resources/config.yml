@@ -33,6 +33,8 @@ messages:
   your-item-sold: "&aYou earned ${money} for selling {amount}x {item}&a!"
   unlisted-item: "&cYou unlisted {amount}x {item}&c from the MarketPlace!"
   market-empty: "&cThere are no items listed on the MarketPlace."
+  black-market-empty: "&cThere are no items listed on the Black Market right now. It will refresh in &7{time}&c."
+  black-market-reset-broadcast: "&a[MarketPlace] The &7/blackmarket &ahas been refreshed!"
 
 market-gui: # Regular Market Place GUI for item listings
   title: "MarketPlace &7({page}/{maxpages})"
@@ -88,6 +90,11 @@ black-market-gui: # Black Market GUI for item listings
     - " "
     - "&dSeller: &7{seller}"
     - "&6Discounted Price: &7${price}"
+  my-listing-text: # Added to the end of the lore of your own item listings
+    - " "
+    - "&dSeller: &7{seller}"
+    - "&6Price: &7${price}"
+    - "&c&nClick to unlist this item"
 
 buy-confirm-gui:
   title: "Confirm your Purchase"

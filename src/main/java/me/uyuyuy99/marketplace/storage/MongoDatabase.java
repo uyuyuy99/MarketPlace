@@ -7,6 +7,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
 import me.uyuyuy99.marketplace.MarketPlace;
+import me.uyuyuy99.marketplace.listing.BlackMarketTask;
 import me.uyuyuy99.marketplace.listing.Listing;
 import me.uyuyuy99.marketplace.listing.Transaction;
 import me.uyuyuy99.marketplace.util.CC;
@@ -39,6 +40,7 @@ public class MongoDatabase {
     private com.mongodb.client.MongoDatabase db;
     private MongoCollection<Document> counters;
     private MongoCollection<Document> itemTable;
+    private MongoCollection<Document> blackMarketTable;
     private MongoCollection<Document> historyTable;
 
     public MongoDatabase(String host, int port, String database, String username, String password) {
@@ -50,21 +52,13 @@ public class MongoDatabase {
         this.password = password;
     }
 
-    private int getNextItemId() {
-        Document result = counters.findOneAndUpdate(
-                Filters.eq("_id", "item_id"),
-                Updates.inc("seq", 1),
-                new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-        );
-        return result.getInteger("seq");
-    }
-
     public void connect() {
         client = new MongoClient(
                 new MongoClientURI("mongodb://" + username + ":" + password + "@" + host + ":" + port + "/?authSource=admin")
         );
         db = client.getDatabase(database);
         counters = db.getCollection("counters");
+        blackMarketTable = db.getCollection("black_market");
         itemTable = db.getCollection("item_listings");
         historyTable = db.getCollection("history");
 
@@ -77,6 +71,15 @@ public class MongoDatabase {
 
     public void disconnect() {
         client.close();
+    }
+
+    private int getNextItemId() {
+        Document result = counters.findOneAndUpdate(
+                Filters.eq("_id", "item_id"),
+                Updates.inc("seq", 1),
+                new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+        );
+        return result.getInteger("seq");
     }
 
     // Loads all the item listings from the database into the item listing manager
@@ -95,7 +98,17 @@ public class MongoDatabase {
             itemCount++;
         }
 
+        for (Document doc : blackMarketTable.find()) {
+            int id = doc.getInteger("_id");
+            Listing listing = MarketPlace.listings().getListing(id);
+
+            if (listing != null) {
+                MarketPlace.listings().getBlackMarketListings().add(listing);
+            }
+        }
+
         MarketPlace.get().getLogger().info("Successfully loaded " + itemCount + " item listings from MongoDB.");
+        BlackMarketTask.refreshIfNeeded();
     }
 
     // Adds listing to database, returns Listing (async)
@@ -110,6 +123,7 @@ public class MongoDatabase {
                     .append("item_data", ItemUtil.serializeItem(item))
                     .append("price", price)
                     .append("time_start", listing.getTimeListed())
+                    .append("black", MarketPlace.listings().isOnBlackMarket(listing))
             );
             return listing;
         });
@@ -121,6 +135,21 @@ public class MongoDatabase {
             @Override
             public void run() {
                 itemTable.deleteOne(Filters.eq("_id", listing.getId()));
+                blackMarketTable.deleteOne(Filters.eq("_id", listing.getId()));
+            }
+        }.runTaskAsynchronously(MarketPlace.get());
+    }
+
+    public void saveBlackMarketListings() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                List<Document> docs = new ArrayList<>();
+                for (Listing listing : MarketPlace.listings().getBlackMarketListings()) {
+                    docs.add(new Document("_id", listing.getId()));
+                }
+                blackMarketTable.drop();
+                blackMarketTable.insertMany(docs);
             }
         }.runTaskAsynchronously(MarketPlace.get());
     }

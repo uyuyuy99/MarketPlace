@@ -11,3 +11,6 @@ permissions:
   marketplace.view:
     description: View the items for sale
     default: true
+  marketplace.history:
+    description: View your transaction history
+    default: true

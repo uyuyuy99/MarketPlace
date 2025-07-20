@@ -46,21 +46,7 @@ public class MarketGui extends InventoryGui {
         // If black market, randomize item listings
         Collection<Listing> listings;
         if (black) {
-            double chance = ((double) Config.get().getInt("options.black-market-item-chance")) / 100.0;
-            List<Listing> shuffledListings = MarketPlace.listings().getListings().stream()
-                    .filter(l -> !viewer.getUniqueId().equals(l.getUuid()))
-                    .collect(Collectors.toCollection(ArrayList::new));
-            Collections.shuffle(shuffledListings);
-            listings = shuffledListings.stream()
-                    .filter(l -> ThreadLocalRandom.current().nextDouble() < chance)
-                    .limit(Config.get().getInt("options.black-market-max-items"))
-                    .toList();
-
-            // If no items were chosen, pick at least one so the black market isn't empty
-            if (listings.isEmpty() && !shuffledListings.isEmpty()) {
-                listings = new ArrayList<>();
-                listings.add(shuffledListings.get(0));
-            }
+            listings = MarketPlace.listings().getBlackMarketListings();
         } else {
             if (mine) { // Only show your own listings
                 listings = MarketPlace.listings().getListings().stream()
