@@ -1,4 +1,5 @@
-mongodb: # MongoDB connection details
+mongodb:
+  # MongoDB connection details
   host: 127.0.0.1
   port: 27017
   database: marketplace
@@ -131,7 +132,9 @@ transactions-gui: # GUI for showing a player's transaction history
     - " "
     - "&dSeller: &7{seller}"
     - "&6Bought For: &7${price}"
+    - "&7{time}"
   sold-text: # Added to the end of the lore of each item you sold
     - " "
     - "&eBuyer: &7{buyer}"
     - "&6Sold For: &7${money}"
+    - "&7{time}"

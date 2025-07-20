@@ -7,6 +7,7 @@ import de.themoep.inventorygui.StaticGuiElement;
 import me.uyuyuy99.marketplace.MarketPlace;
 import me.uyuyuy99.marketplace.storage.Config;
 import me.uyuyuy99.marketplace.util.NumberUtil;
+import me.uyuyuy99.marketplace.util.TimeUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -54,11 +55,13 @@ public class TransactionsGui extends InventoryGui {
             if (tran.isBuyer(viewer)) {
                 lore.addAll(Config.getStringList(configKey + "bought-text",
                         "seller", tran.getSellerName(),
-                        "price", NumberUtil.formatLong(tran.getMoneySpent())));
+                        "price", NumberUtil.formatLong(tran.getMoneySpent()),
+                        "time", TimeUtil.formatDate(tran.getTime())));
             } else {
                 lore.addAll(Config.getStringList(configKey + "sold-text",
                         "buyer", tran.getBuyerName(),
-                        "money", NumberUtil.formatLong(tran.getMoneyEarned())));
+                        "money", NumberUtil.formatLong(tran.getMoneyEarned()),
+                        "time", TimeUtil.formatDate(tran.getTime())));
             }
             meta.setLore(lore);
             item.setItemMeta(meta);

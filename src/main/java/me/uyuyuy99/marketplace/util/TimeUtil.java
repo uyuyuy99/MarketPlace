@@ -1,5 +1,7 @@
 package me.uyuyuy99.marketplace.util;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class TimeUtil {
@@ -34,6 +36,15 @@ public class TimeUtil {
             String diff = sb.toString();
             return diff.isEmpty() ? "Now" : diff.trim();
         }
+    }
+
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy 'at' HH:mm");
+    public static String formatDate(long epochMs, String defaultText) {
+        if (epochMs <= 0) return defaultText;
+        return dateFormat.format(new Date(epochMs));
+    }
+    public static String formatDate(long epochMs) {
+        return formatDate(epochMs, "");
     }
 
 }

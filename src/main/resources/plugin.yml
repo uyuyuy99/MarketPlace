@@ -1,7 +1,7 @@
 name: MarketPlace
 version: '1.0'
 main: me.uyuyuy99.marketplace.MarketPlace
-api-version: '1.20'
+api-version: '1.21'
 depend:
   - Vault
 permissions:
