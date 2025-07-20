@@ -52,8 +52,15 @@ public final class MarketPlace extends JavaPlugin {
         }
         econ = rsp.getProvider();
 
-        // Create item listing manager & database
+        // Create item listing manager
         listings = new ListingManager();
+
+        // Create database
+        if (Config.get().getString("mongodb.host").equals("0.0.0.0")) {
+            getLogger().severe("Please fill out your MongoDB connection details in plugins/MarketPlace/config.yml.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         db = new MongoDatabase(
                 Config.get().getString("mongodb.host"),
                 Config.get().getInt("mongodb.port"),
@@ -66,7 +73,7 @@ public final class MarketPlace extends JavaPlugin {
         try {
             db.connect();
         } catch (Exception e) {
-            getLogger().severe("Couldn't connect to MongoDB! Please fill in your connection details in config.yml.");
+            getLogger().severe("Couldn't connect to MongoDB! Please double-check your connection details in config.yml.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -88,8 +95,10 @@ public final class MarketPlace extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        db.disconnect();
-        BlackMarketTask.save();
+        if (db != null) {
+            db.disconnect();
+            BlackMarketTask.save();
+        }
     }
 
     public static MarketPlace get() {
